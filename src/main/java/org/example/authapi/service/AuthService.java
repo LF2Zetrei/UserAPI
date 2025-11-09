@@ -90,7 +90,7 @@ public class AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Username not found"));
 
-        refreshTokenRepository.deletedByUser(user);
+        refreshTokenRepository.deleteByUser(user);
 
         return new MessageResponse("User logged out successfully");
     }
