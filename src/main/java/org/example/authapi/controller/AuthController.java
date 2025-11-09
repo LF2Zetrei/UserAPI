@@ -1,4 +1,40 @@
 package org.example.authapi.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.example.authapi.dto.LoginRequest;
+import org.example.authapi.dto.LogoutRequest;
+import org.example.authapi.dto.RegisterRequest;
+import org.example.authapi.service.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
+    private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody String refreshToken) {
+        return ResponseEntity.ok(authService.refreshToken(refreshToken));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok("logged out successfully");
+    }
 }
