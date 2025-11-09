@@ -2,8 +2,10 @@ package org.example.authapi.service;
 
 import org.example.authapi.dto.*;
 import org.example.authapi.model.RefreshToken;
+import org.example.authapi.model.Role;
 import org.example.authapi.model.User;
 import org.example.authapi.repository.RefreshTokenRepository;
+import org.example.authapi.repository.RoleRepository;
 import org.example.authapi.repository.UserRepository;
 import org.example.authapi.security.JWTUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -21,6 +25,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
     private final JWTUtils jwtUtils;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JWTBlacklistService jwtBlacklistService;
@@ -29,11 +34,13 @@ public class AuthService {
                        RefreshTokenRepository refreshTokenRepository,
                        JWTBlacklistService jwtBlacklistService,
                        PasswordEncoder passwordEncoder,
+                       RoleRepository roleRepository,
                        JWTUtils jwtUtils) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtBlacklistService = jwtBlacklistService;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
         this.jwtUtils = jwtUtils;
     }
 
@@ -49,6 +56,13 @@ public class AuthService {
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+                .orElseThrow(() -> new UsernameNotFoundException("Role not found"));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        user.setRoles(roles);
+
         userRepository.save(user);
 
         return new MessageResponse("User registered successfully");
