@@ -42,22 +42,25 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtBlacklistService.isBlacklisted(token)) {
                     throw new JwtException("JWT token expired");
                 }
+
+                String username = jwtUtils.getUsernameFromJwtToken(token);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                Collections.emptyList()
+                        );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-
-            String username = jwtUtils.getUsernameFromJwtToken(token);
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            Collections.emptyList()
-                    );
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (JwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid or blacklist JWT");
+            response.getWriter().write("Invalid or blacklisted JWT");
             return;
         }
+
+        filterChain.doFilter(request, response);
     }
+
 }
