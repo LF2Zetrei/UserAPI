@@ -1,5 +1,6 @@
 package org.example.authapi.service;
 
+import jakarta.transaction.Transactional;
 import org.example.authapi.dto.*;
 import org.example.authapi.model.RefreshToken;
 import org.example.authapi.model.Role;
@@ -79,22 +80,28 @@ public class AuthService {
         String jwt = jwtUtils.generateJwtToken(user.getUsername());
         RefreshToken refreshToken = createRefreshToken(user);
 
-        return new JWTResponse(jwt, user.getUsername());
+        return new JWTResponse(jwt, user.getUsername(), refreshToken.getToken());
     }
 
-    public JWTResponse refreshToken(String refreshTokenStr) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
+    public JWTResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        RefreshToken oldToken = refreshTokenRepository.findByToken(refreshTokenRequest.getRefreshToken())
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
-        if (refreshToken.getExpriryDate().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(refreshToken);
+        if (oldToken.getExpriryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(oldToken);
             throw new RuntimeException("Refresh token expired");
         }
 
-        String newJwt = jwtUtils.generateJwtToken(refreshToken.getUser().getUsername());
-        return new JWTResponse(newJwt, refreshToken.getUser().getUsername());
+        // supprimer l'ancien et créer un nouveau refresh token
+        refreshTokenRepository.delete(oldToken);
+        RefreshToken newRefreshToken = createRefreshToken(oldToken.getUser());
+
+        String newJwt = jwtUtils.generateJwtToken(oldToken.getUser().getUsername());
+
+        return new JWTResponse(newJwt, oldToken.getUser().getUsername(), newRefreshToken.getToken());
     }
 
+    @Transactional
     public MessageResponse logout(LogoutRequest request) {
         String jwt = request.getJwt();
 
