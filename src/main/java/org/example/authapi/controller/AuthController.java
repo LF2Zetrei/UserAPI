@@ -2,10 +2,7 @@ package org.example.authapi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.authapi.dto.LoginRequest;
-import org.example.authapi.dto.LogoutRequest;
-import org.example.authapi.dto.RegisterRequest;
-import org.example.authapi.dto.RefreshTokenRequest;
+import org.example.authapi.dto.*;
 import org.example.authapi.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,13 +27,13 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<?> refresh(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody LogoutRequest request) {
-        authService.logout(request);
-        return ResponseEntity.ok("logged out successfully");
+    public ResponseEntity<?> logout(@Valid @RequestBody LogoutRequest request) {
+        MessageResponse response = authService.logout(request);
+        return ResponseEntity.ok(response);
     }
 }

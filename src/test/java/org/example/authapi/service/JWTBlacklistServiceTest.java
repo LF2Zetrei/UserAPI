@@ -44,12 +44,16 @@ public class JWTBlacklistServiceTest {
 
     @Test
     void testBlacklistToken_WhenAlreadyBlacklisted_ShouldNotSaveAgain() {
-        String token ="abc123";
+        String token = "abc123";
 
         when(jwtBlacklistRepository.existsByToken(token)).thenReturn(true);
+
         jwtBlacklistService.blacklistToken(token);
-        verify(jwtBlacklistRepository, times(1)).save(any(JwtBlacklist.class));
+
+        verify(jwtBlacklistRepository, never()).save(any(JwtBlacklist.class));
     }
+
+
 
     @Test
     void testIsBlacklisted_shouldReturnTrueOrFalse() {

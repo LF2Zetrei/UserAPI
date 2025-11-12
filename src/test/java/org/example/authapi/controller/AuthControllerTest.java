@@ -5,14 +5,9 @@ import org.example.authapi.dto.*;
 import org.example.authapi.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -22,12 +17,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-@WebMvcTest(AuthController.class)
-@Import(AuthController.class) // pour s'assurer que le controller est injecté avec le mock
 class AuthControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
     @Mock
@@ -36,7 +27,6 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
     private RegisterRequest registerRequest;
@@ -48,6 +38,7 @@ class AuthControllerTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
+        objectMapper = new ObjectMapper();
 
         registerRequest = new RegisterRequest();
         registerRequest.setUsername("john");
@@ -63,6 +54,7 @@ class AuthControllerTest {
 
         logoutRequest = new LogoutRequest();
         logoutRequest.setJwt("jwt-token");
+        logoutRequest.setRefreshToken("refresh-token");
     }
 
     @Test
@@ -88,7 +80,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jwt").value("jwt"))
+                .andExpect(jsonPath("$.accessToken").value("jwt"))
                 .andExpect(jsonPath("$.username").value("john"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
 
@@ -104,7 +96,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshTokenRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jwt").value("new-jwt"))
+                .andExpect(jsonPath("$.accessToken").value("new-jwt"))
                 .andExpect(jsonPath("$.username").value("john"))
                 .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
 
@@ -113,13 +105,14 @@ class AuthControllerTest {
 
     @Test
     void testLogout() throws Exception {
-        doNothing().when(authService).logout(any(LogoutRequest.class));
+        MessageResponse messageResponse = new MessageResponse("User logged out successfully");
+        when(authService.logout(any(LogoutRequest.class))).thenReturn(messageResponse);
 
         mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(logoutRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("logged out successfully"));
+                .andExpect(jsonPath("$.message").value("User logged out successfully"));
 
         verify(authService, times(1)).logout(any(LogoutRequest.class));
     }

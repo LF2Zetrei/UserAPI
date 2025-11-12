@@ -6,11 +6,9 @@ import org.example.authapi.dto.UserProfileResponse;
 import org.example.authapi.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,7 +24,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
     private MockMvc mockMvc;
@@ -36,9 +33,6 @@ class UserControllerTest {
 
     @InjectMocks
     private UserController userController;
-
-    @Mock
-    private Authentication authentication;
 
     private ObjectMapper objectMapper;
 
@@ -52,22 +46,23 @@ class UserControllerTest {
 
         Set<String> roles = new HashSet<>();
         roles.add("ROLE_USER");
+
         userProfileResponse = new UserProfileResponse(
                 UUID.randomUUID(),
                 "john",
                 "john@example.com",
                 roles
         );
-
-        when(authentication.getName()).thenReturn("john");
     }
 
     @Test
     void testGetMe() throws Exception {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john");
+
         when(userService.getUserProfile("john")).thenReturn(userProfileResponse);
 
-        mockMvc.perform(get("/api/user/me")
-                        .principal(authentication))
+        mockMvc.perform(get("/api/user/me").principal(authentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("john"))
                 .andExpect(jsonPath("$.email").value("john@example.com"))
@@ -78,6 +73,9 @@ class UserControllerTest {
 
     @Test
     void testUpdateUser() throws Exception {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john");
+
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setUsername("johnny");
         updateUserRequest.setEmail("johnny@example.com");
