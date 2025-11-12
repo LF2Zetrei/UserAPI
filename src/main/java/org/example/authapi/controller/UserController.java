@@ -1,5 +1,6 @@
 package org.example.authapi.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.authapi.dto.UpdateUserRequest;
 import org.example.authapi.service.UserService;
@@ -21,7 +22,7 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@RequestBody UpdateUserRequest request, Authentication authentication) {
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserRequest request, Authentication authentication) {
         return ResponseEntity.ok(
                 userService.updateUser(authentication.getName(), request)
         );
