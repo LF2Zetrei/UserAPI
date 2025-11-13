@@ -35,16 +35,6 @@ jobs:
       - name: Start database using Docker Compose
         run: docker compose up -d db
 
-      - name: Wait for Postgres to be ready
-        run: |
-          echo "Waiting for Postgres..."
-          for i in {1..15}; do
-            docker exec $(docker ps -qf "name=db") pg_isready -U $DATASOURCE_USERNAME && break
-            echo "Still waiting..."
-            sleep 3
-          done
-
-
       - name: Run Backend
         run: docker compose up -d authapi
 
