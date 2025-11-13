@@ -51,5 +51,13 @@ jobs:
         if: always()
         run: docker compose down
 
-      - name: Build Docker Image
-        run: docker build -t authapi:ci .
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+        env:
+          DATASOURCE_NAME: ${{ secrets.DATASOURCE_NAME }}
+          DATASOURCE_USERNAME: ${{ secrets.DATASOURCE_USERNAME }}
+          DATASOURCE_PASSWORD: ${{ secrets.DATASOURCE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+          JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
