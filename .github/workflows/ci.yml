@@ -46,13 +46,6 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test --no-daemon
-
-      - name: Stop Docker Compose
-        if: always()
-        run: docker compose down
-
-      - name: Run tests
-        run: ./gradlew test --no-daemon
         env:
           DATASOURCE_NAME: ${{ secrets.DATASOURCE_NAME }}
           DATASOURCE_USERNAME: ${{ secrets.DATASOURCE_USERNAME }}
@@ -61,3 +54,7 @@ jobs:
           JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
           JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down
